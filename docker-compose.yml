@@ -1,0 +1,35 @@
+version: '3.8'
+
+networks:
+  lavanet-net:
+    driver: bridge
+
+services:
+  auth-service:
+    build: .
+    container_name: auth-service
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - SESSION_TTL=3600
+    depends_on:
+      - redis
+    networks:
+      - lavanet-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - lavanet-net
+
+  user-profile-service:
+    external: true
+    name: user-profile-service
+    networks:
+      - lavanet-net
