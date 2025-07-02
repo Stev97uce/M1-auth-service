@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"auth-service/internal/event"
 	"auth-service/internal/session"
 
 	"github.com/google/uuid"
@@ -46,6 +47,8 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	token := uuid.New().String()
 	a.SessionStore.SetSession(token, creds.Username)
 
+	event.SendEventToKafka(creds.Username + " performed login")
+
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",
 		Value:   token,
@@ -66,6 +69,8 @@ func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to delete session", http.StatusInternalServerError)
 		return
 	}
+
+	event.SendEventToKafka("User " + cookie.Value + " performed logout")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   "session_token",
