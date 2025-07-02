@@ -1,14 +1,15 @@
 package auth
 
 import (
-	"encoding/json"
-	"net/http"
 	"bytes"
-	"time"
+	"encoding/json"
 	"io"
+	"net/http"
+	"time"
+
+	"auth-service/internal/session"
 
 	"github.com/google/uuid"
-	"auth-service/internal/session"
 )
 
 type Credentials struct {
@@ -27,7 +28,7 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// agreagr el link de la ec2 del micro2
+	// Agregar el link de la ec2 del micro
 	payload, _ := json.Marshal(creds)
 	resp, err := http.Post("http://user-profile-service:8000/login", "application/json", bytes.NewBuffer(payload))
 	if err != nil {
@@ -51,4 +52,47 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Expires: time.Now().Add(a.SessionStore.TTL),
 	})
 	w.Write([]byte("Login successful"))
+}
+
+func (a *AuthHandler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_token")
+	if err != nil || cookie.Value == "" {
+		http.Error(w, "Unauthorized - No token", http.StatusUnauthorized)
+		return
+	}
+
+	err = a.SessionStore.DeleteSession(cookie.Value)
+	if err != nil {
+		http.Error(w, "Failed to delete session", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   "session_token",
+		Value:  "",
+		MaxAge: -1,
+	})
+
+	w.Write([]byte("Logged out successfully"))
+}
+
+func (a *AuthHandler) RoleValidationHandler(w http.ResponseWriter, r *http.Request) {
+
+	cookie, err := r.Cookie("session_token")
+	if err != nil || cookie.Value == "" {
+		http.Error(w, "Unauthorized - No token", http.StatusUnauthorized)
+		return
+	}
+	//Agregar el link de la ec2 del micro
+	resp, err := http.Get("http://user-profile-service:8000/users/" + cookie.Value)
+	if err != nil {
+		http.Error(w, "User service unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		w.Write([]byte("Role validated"))
+	} else {
+		http.Error(w, "Invalid role", http.StatusUnauthorized)
+	}
 }
