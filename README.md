@@ -46,8 +46,8 @@ Para que el pipeline funcione correctamente, necesitas configurar los siguientes
 #### `DOCKER_USERNAME`
 Tu nombre de usuario de Docker Hub.
 
-#### `DOCKER_PASSWORD`
-Tu contraseña de Docker Hub o un token de acceso.
+#### `DOCKER_TOKEN`
+Tu token de acceso de Docker Hub.
 
 ### Cómo crear un token de acceso de Docker Hub:
 
@@ -56,7 +56,7 @@ Tu contraseña de Docker Hub o un token de acceso.
 3. Ve a **Account Settings** > **Security**
 4. Haz clic en **New Access Token**
 5. Dale un nombre descriptivo (ej: "GitHub Actions")
-6. Copia el token generado y úsalo como `DOCKER_PASSWORD`
+6. Copia el token generado y úsalo como `DOCKER_TOKEN`
 
 ## Pipeline de CI/CD
 
