@@ -12,6 +12,14 @@ import (
 
 var ctx = context.Background()
 
+// SessionStore define la interfaz para el almacenamiento de sesiones
+type SessionStore interface {
+	SetSession(token, userID string) error
+	DeleteSession(token string) error
+	ValidateSession(token string) (string, error)
+	GetTTL() time.Duration
+}
+
 type RedisClient struct {
 	Client *redis.Client
 	TTL    time.Duration
@@ -42,4 +50,8 @@ func (r *RedisClient) DeleteSession(token string) error {
 
 func (r *RedisClient) ValidateSession(token string) (string, error) {
 	return r.Client.Get(ctx, token).Result()
+}
+
+func (r *RedisClient) GetTTL() time.Duration {
+	return r.TTL
 }

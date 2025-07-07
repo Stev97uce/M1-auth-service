@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"auth-service/internal/event"
@@ -19,7 +20,7 @@ type Credentials struct {
 }
 
 type AuthHandler struct {
-	SessionStore *session.RedisClient
+	SessionStore session.SessionStore
 }
 
 func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +32,7 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Agregar el link de la ec2 del micro
 	payload, _ := json.Marshal(creds)
-	resp, err := http.Post("http://user-profile-service:8000/login", "application/json", bytes.NewBuffer(payload))
+	resp, err := http.Post(os.Getenv("USER_PROFILE_SERVICE_URL")+"/login", "application/json", bytes.NewBuffer(payload))
 	if err != nil {
 		http.Error(w, "User service unavailable", http.StatusServiceUnavailable)
 		return
@@ -52,7 +53,7 @@ func (a *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",
 		Value:   token,
-		Expires: time.Now().Add(a.SessionStore.TTL),
+		Expires: time.Now().Add(a.SessionStore.GetTTL()),
 	})
 	w.Write([]byte("Login successful"))
 }
@@ -89,7 +90,7 @@ func (a *AuthHandler) RoleValidationHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	//Agregar el link de la ec2 del micro
-	resp, err := http.Get("http://user-profile-service:8000/users/" + cookie.Value)
+	resp, err := http.Get(os.Getenv("USER_PROFILE_SERVICE_URL") + "/users/" + cookie.Value)
 	if err != nil {
 		http.Error(w, "User service unavailable", http.StatusServiceUnavailable)
 		return

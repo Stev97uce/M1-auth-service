@@ -1,9 +1,5 @@
 version: '3.8'
 
-networks:
-  lavanet-net:
-    driver: bridge
-
 services:
   auth-service:
     build: .
@@ -11,25 +7,21 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - REDIS_HOST=redis
+      - REDIS_HOST=18.232.41.255  
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=
+      - REDIS_PASSWORD=${REDIS_PASSWORD} 
       - SESSION_TTL=3600
-    depends_on:
-      - redis
-    networks:
-      - lavanet-net
+      - USER_PROFILE_SERVICE_URL=http://34.193.149.183:8000  
+      - AWS_REGION=us-east-1 
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - lavanet-net
 
-  user-profile-service:
-    external: true
-    name: user-profile-service
-    networks:
-      - lavanet-net
+networks:
+  default:
+    driver: bridge
+    name: lavanet-net

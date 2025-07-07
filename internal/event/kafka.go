@@ -8,7 +8,6 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-// Función para enviar eventos a Kafka
 func SendEventToKafka(event string) {
 	kafkaBroker := os.Getenv("KAFKA_BROKER")
 	writer := kafka.NewWriter(kafka.WriterConfig{

@@ -21,7 +21,7 @@ func AuthMiddleware(sessionStore *session.RedisClient) func(http.Handler) http.H
 				return
 			}
 
-			next.ServeHTTP(w, r) // Token válido, continuar
+			next.ServeHTTP(w, r)
 		})
 	}
 }
